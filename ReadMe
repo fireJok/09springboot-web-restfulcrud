@@ -1,0 +1,76 @@
+关于springboot的web的学习
+1、 config就相当于原先springmvc的配置文件MyMVCConfig
+    resources/templates/commons文件夹下放着抽取出来的公共内容
+    resources/static文件夹下放的是静态资源
+    resources/i18n文件夹下放的是国际化配置文件
+    exception包下放的是自定义的异常类
+    component组件包下放着一些组件，比如拦截器，国际化点击切换语言的设置组件
+2、config包中是关于springmvc的配置类，作用是让springboot扩展和全面接管springmvc
+3、test.html是测试跳转页面的
+4、test02.html是测试提取后台传过来的数据的
+这还是一个练习crud的项目
+    1、i18n包中是国际化配置文件
+    2、component包下的MyLocaleResolver作用
+        /**
+         * 点击login.html钟的中文/英文切换国际化配置
+         * 系统默认的LocalResolver无法做到点击login.html总的中文/英文切换国际化配置，所以我们可以
+         * 自己写一个LocalResolver来完成这个需求
+         *这个类写完之后还要再MyMVCConfig配置类中进行注册
+         */
+         @Bean
+             public LocaleResolver localeResolver(){
+                 return new MyLocaleResolver();
+             }
+5、页面中链接携带参数（以前是用？进行拼接，现在是（l=zh_CN）key=value的形式）
+    <a class="btn btn-sm" th:href="@{/index.html(l=zh_CN)}">中文</a>
+6、引入静态资源
+    th:href="@{/webjars/bootstrap/4.0.0/css/bootstrap.css}"相当于以前的href=""
+    th:text可以用来改变当前元素文本的值
+    th:src="@{/asserts/img/bootstrap-solid.svg}"相当于
+    src="asserts/img/bootstrap-solid.svg"
+7、LoginHandlerInterceptor类中写的是拦截器，对登录的拦截，并且需要在MyMVCConfig配置类中注册
+（这就相当于之前springmvc中写了拦截器，然后在配置文件中配置一样）
+8、公共页的抽取（将多个页面的公共内容抽取出来，这样就避免了在多个页面写同样的代码）
+    抽取dashboard页面的公共内容，顶部栏和侧边栏
+    dashboard页面
+        <!--下面的nav标签内容为公共内容，可以抽取出来
+        		抽取公共内容有多种方法，这里采用th:fragment="topbar"
+        		然后在list页面中引用
+        		<div th:replace="dashboard::topbar"></div>
+        		-->
+        		<nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0" th:fragment="topbar">
+        			<a class="navbar-brand col-sm-3 col-md-2 mr-0" href="http://getbootstrap.com/docs/4.0/examples/dashboard/#">[[${session.loginuser}]]</a>
+        			<input class="form-control form-control-dark w-100" type="text" placeholder="Search" th:placeholder="Search" aria-label="Search">
+        			<ul class="navbar-nav px-3">
+        				<li class="nav-item text-nowrap">
+        					<a class="nav-link" href="http://getbootstrap.com/docs/4.0/examples/dashboard/#">Sign out</a>
+        				</li>
+        			</ul>
+        		</nav>
+
+        		<div class="container-fluid">
+        			<div class="row">
+        				<!--这里的侧边栏是公共内容，可以抽取出来
+        				抽取有多中方法，这里使用标签选择器的方法id="sidebar"
+        				然后在list页面引用即可
+        				<div th:replace="~{dashboard::#sidebar}"></div>
+        				-->
+        				<nav class="col-md-2 d-none d-md-block bg-light sidebar" id="sidebar">
+    在list页面中引用
+        <!--引入公共页topbar,topbar在dashboard页面45行声明-->
+        		<div th:replace="dashboard::topbar"></div>
+        <!--引入侧边栏公共内容-->
+        		<div th:replace="~{dashboard::#sidebar}"></div>
+9、定制错误数据
+    当用户使用别的客户端访问时，出现错误希望返回json数据
+    做法：
+        9.1、自定义一个运行时异常：用户不存在，在exception包下的UserNotExitsExpetion
+        9.2、写一个异常处理器，在controller包中的MyExceptionHandler
+            这个类中有两种返回异常信息的方法
+        9.3、在component类下写一个异常处理类，这个类可以自适应客户端和浏览器，还能返回所有信息
+            这是第三种方法，异常处理返回推荐使用这种方式
+10、注册servlet三大组件
+    10.1、servlet包中写了一个servlet类；
+          filter包中写了一个filter类；
+          listener包中写了一个listener类
+    10.2、config包中的MyServerConfig类用来注册三大组件
